@@ -55,16 +55,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const getWeatherIcon = (cond: string) => {
     switch (cond) {
       case 'Rainy':
-        return <CloudRain className="w-3.5 h-3.5 text-[#004253]" />;
+        return <CloudRain className="w-3.5 h-3.5 text-[#004253] dark:text-[#38bdf8]" />;
       case 'Sunny':
-        return <Sun className="w-3.5 h-3.5 text-[#E6A100]" />;
+        return <Sun className="w-3.5 h-3.5 text-[#E6A100] dark:text-amber-400" />;
       case 'Windy':
-        return <Wind className="w-3.5 h-3.5 text-[#1A1A1A]" />;
+        return <Wind className="w-3.5 h-3.5 text-[#1A1A1A] dark:text-slate-300" />;
       case 'Snowy':
       case 'Cold & Crisp':
-        return <Snowflake className="w-3.5 h-3.5 text-[#004253]" />;
+        return <Snowflake className="w-3.5 h-3.5 text-[#004253] dark:text-[#38bdf8]" />;
       default:
-        return <CloudSun className="w-3.5 h-3.5 text-[#1A1A1A]" />;
+        return <CloudSun className="w-3.5 h-3.5 text-[#1A1A1A] dark:text-amber-300" />;
     }
   };
 
@@ -130,7 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                           onRefreshWeather(weather.location);
                           setShowLocationMenu(false);
                         }}
-                        className="text-[#004253] hover:underline flex items-center gap-1"
+                        className="text-[#004253] dark:text-[#38bdf8] hover:underline flex items-center gap-1"
                       >
                         <RefreshCw className={`w-3 h-3 ${isWeatherLoading ? 'animate-spin' : ''}`} />
                         Refresh
@@ -148,27 +148,27 @@ export const Navbar: React.FC<NavbarProps> = ({
                         }}
                         className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${
                           weather.location === city
-                            ? 'bg-[#1A1A1A] text-white'
-                            : 'hover:bg-[#F5F5F0] text-[#1A1A1A]'
+                            ? 'bg-[#1A1A1A] text-white dark:bg-[#004253] dark:text-white'
+                            : 'hover:bg-[#F5F5F0] dark:hover:bg-[#222226] text-[#1A1A1A] dark:text-white'
                         }`}
                       >
                         <span>{city}</span>
-                        {weather.location === city && <span className="text-[10px]">Active</span>}
+                        {weather.location === city && <span className="text-[10px] text-white dark:text-[#38bdf8] font-bold">Active</span>}
                       </button>
                     ))}
                   </div>
 
-                  <form onSubmit={handleCustomCitySubmit} className="pt-2 border-t border-[#E5E5E1] flex gap-1">
+                  <form onSubmit={handleCustomCitySubmit} className="pt-2 border-t border-[#E5E5E1] dark:border-[#2A2A30] flex gap-1">
                     <input
                       type="text"
                       value={customCity}
                       onChange={(e) => setCustomCity(e.target.value)}
                       placeholder="Other city..."
-                      className="w-full px-2 py-1 text-xs border border-[#E5E5E1] rounded-lg focus:outline-none focus:border-[#1A1A1A]"
+                      className="w-full px-2 py-1 text-xs border border-[#E5E5E1] dark:border-[#2A2A30] bg-white dark:bg-[#222226] text-[#1A1A1A] dark:text-white placeholder:text-[#A1A1AA] rounded-lg focus:outline-none focus:border-[#1A1A1A] dark:focus:border-[#38bdf8]"
                     />
                     <button
                       type="submit"
-                      className="px-2.5 py-1 bg-[#1A1A1A] text-white text-xs font-medium rounded-lg shrink-0"
+                      className="px-2.5 py-1 bg-[#1A1A1A] dark:bg-[#004253] hover:bg-[#2A2A2A] dark:hover:bg-[#005B73] text-white text-xs font-medium rounded-lg shrink-0"
                     >
                       Go
                     </button>

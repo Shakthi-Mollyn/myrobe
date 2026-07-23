@@ -27,16 +27,16 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
   const getWeatherIcon = (cond: string) => {
     switch (cond) {
       case 'Rainy':
-        return <CloudRain className="w-4 h-4 text-[#004253]" />;
+        return <CloudRain className="w-4 h-4 text-[#004253] dark:text-[#38bdf8]" />;
       case 'Sunny':
-        return <Sun className="w-4 h-4 text-[#1A1A1A]" />;
+        return <Sun className="w-4 h-4 text-[#E6A100] dark:text-amber-400" />;
       case 'Windy':
-        return <Wind className="w-4 h-4 text-[#1A1A1A]" />;
+        return <Wind className="w-4 h-4 text-[#1A1A1A] dark:text-slate-300" />;
       case 'Snowy':
       case 'Cold & Crisp':
-        return <Snowflake className="w-4 h-4 text-[#004253]" />;
+        return <Snowflake className="w-4 h-4 text-[#004253] dark:text-[#38bdf8]" />;
       default:
-        return <CloudSun className="w-4 h-4 text-[#1A1A1A]" />;
+        return <CloudSun className="w-4 h-4 text-[#1A1A1A] dark:text-amber-300" />;
     }
   };
 
