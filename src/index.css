@@ -7,6 +7,15 @@ html, body, #root {
   width: 100%;
 }
 
+/* Utility to hide scrollbars for clean scrollable containers */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Smooth transitions for theme switching */
 body {
   transition: background-color 0.2s ease, color 0.2s ease;

@@ -179,7 +179,7 @@ export const HistoryAndAnalyticsView: React.FC<HistoryAndAnalyticsViewProps> = (
       </div>
 
       {/* Unified Navigation Sub-Tabs */}
-      <div className="flex border-b border-[#E5E5E1] dark:border-[#2A2A30] gap-6 text-xs font-semibold overflow-x-auto">
+      <div className="flex border-b border-[#E5E5E1] dark:border-[#2A2A30] gap-6 text-xs font-semibold overflow-x-auto no-scrollbar">
         <button
           id="tab-sub-analytics"
           onClick={() => setActiveSubTab('analytics')}
