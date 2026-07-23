@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@variant dark (&:where(.dark, .dark *));
+
+html, body, #root {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+/* Smooth transitions for theme switching */
+body {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Dark Mode explicit overrides fallback */
+html.dark {
+  color-scheme: dark;
+}
+
+/* Form element base styling in dark mode */
+html.dark input,
+html.dark select,
+html.dark option,
+html.dark textarea {
+  color-scheme: dark;
+}
+
+
