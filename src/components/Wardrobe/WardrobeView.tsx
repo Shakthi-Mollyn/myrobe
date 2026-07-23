@@ -8,7 +8,6 @@ import {
   Star,
   MapPin,
   Grid,
-  List,
   Sparkles,
   CheckCircle2,
   AlertCircle,
@@ -55,7 +54,6 @@ export const WardrobeView: React.FC<WardrobeViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<'All' | 'Clean' | 'In Laundry'>('All');
   const [formalityFilter, setFormalityFilter] = useState<FormalityLevel | 'All'>('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // Extract user's first name
   const rawName = user ? (user.displayName || user.email?.split('@')[0] || '') : '';
@@ -230,36 +228,6 @@ export const WardrobeView: React.FC<WardrobeViewProps> = ({
               <option value="Sporty">Sporty</option>
               <option value="Party / Glam">Party / Glam</option>
             </select>
-
-            {/* View Mode Switcher */}
-            <div className="col-span-2 sm:col-auto flex items-center justify-center sm:justify-start p-1 bg-[#E6F0F2] dark:bg-[#004253]/30 border border-[#004253]/20 dark:border-[#004253]/40 rounded-xl">
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-[#004253] dark:bg-[#005B73] text-white shadow-xs'
-                    : 'text-[#004253] dark:text-[#38bdf8] hover:bg-white/60 dark:hover:bg-[#004253]/50'
-                }`}
-                title="Grid View"
-              >
-                <Grid className="w-3.5 h-3.5" />
-                <span className="sm:hidden text-[11px]">Grid</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                className={`flex-1 sm:flex-none px-3.5 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-[#004253] dark:bg-[#005B73] text-white shadow-xs'
-                    : 'text-[#004253] dark:text-[#38bdf8] hover:bg-white/60 dark:hover:bg-[#004253]/50'
-                }`}
-                title="List View"
-              >
-                <List className="w-3.5 h-3.5" />
-                <span className="sm:hidden text-[11px]">List</span>
-              </button>
-            </div>
           </div>
         </div>
 
@@ -311,7 +279,7 @@ export const WardrobeView: React.FC<WardrobeViewProps> = ({
             <span>Add New Piece</span>
           </button>
         </div>
-      ) : viewMode === 'grid' ? (
+      ) : (
         /* Grid Layout */
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
           {filteredItems.map((item) => (
@@ -389,59 +357,6 @@ export const WardrobeView: React.FC<WardrobeViewProps> = ({
                     <span>{item.status === 'Clean' ? 'Send to Laundry' : 'Mark Clean'}</span>
                   </button>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        /* List View */
-        <div className="bg-white dark:bg-[#1C1C20] border border-[#E5E5E1] dark:border-[#2A2A30] rounded-2xl overflow-hidden divide-y divide-[#E5E5E1] dark:divide-[#2A2A30]">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="p-4 hover:bg-[#F9F9F8] dark:hover:bg-[#222226] transition-colors flex items-center justify-between gap-4 cursor-pointer"
-              onClick={() => onSelectItem(item)}
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                <img
-                  src={item.imageUrl}
-                  alt={item.name}
-                  className="w-14 h-14 object-cover rounded-xl border border-[#E5E5E1] dark:border-[#2A2A30] shrink-0 bg-[#F9F9F8] dark:bg-[#222226]"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-semibold text-[#1A1A1A] dark:text-white truncate">{item.name}</h3>
-                    {item.isFavorite && <Star className="w-3.5 h-3.5 text-[#1A1A1A] dark:text-white fill-[#1A1A1A] dark:fill-white shrink-0" />}
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-[#7A7A75] dark:text-[#A1A1AA] mt-1">
-                    <span className="text-[#1A1A1A] dark:text-white font-medium">{item.category}</span>
-                    <span>• {item.color}</span>
-                    <span>• {item.storageLocation}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-4 shrink-0">
-                <span
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    item.status === 'Clean'
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
-                      : 'bg-rose-50 dark:bg-rose-950/60 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800'
-                  }`}
-                >
-                  {item.status}
-                </span>
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggleCleanStatus(item.id);
-                  }}
-                  className="px-3.5 py-1.5 rounded-xl bg-[#E6F0F2] dark:bg-[#004253]/30 border border-[#004253]/20 hover:bg-[#004253] hover:text-white dark:hover:bg-[#005B73] text-xs font-semibold text-[#004253] dark:text-[#38bdf8] transition-all flex items-center gap-1.5"
-                >
-                  <WashingMachine className="w-3.5 h-3.5" />
-                  <span>{item.status === 'Clean' ? 'Send to Laundry' : 'Mark Clean'}</span>
-                </button>
               </div>
             </div>
           ))}

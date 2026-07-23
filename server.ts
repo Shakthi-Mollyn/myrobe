@@ -28,11 +28,33 @@ const getGeminiClient = () => {
   });
 };
 
-// Weather API Endpoint with AI Weather Lookup
+// Weather API Endpoint with AI Weather Lookup & IP/GPS Detection
 app.get('/api/weather', async (req, res) => {
-  const location = req.query.location as string;
+  const locationQuery = (req.query.location as string)?.trim();
   const lat = req.query.lat as string;
   const lng = req.query.lng as string;
+  const autoDetect = req.query.auto === 'true';
+
+  let targetLocation = locationQuery || '';
+
+  // If auto-detect requested without lat/lng, try IP geolocation
+  if (autoDetect && !lat && !lng && !targetLocation) {
+    try {
+      const ipRes = await fetch('http://ip-api.com/json/?fields=status,city,country,lat,lon');
+      if (ipRes.ok) {
+        const ipData = await ipRes.json();
+        if (ipData && ipData.status === 'success' && ipData.city) {
+          targetLocation = `${ipData.city}, ${ipData.country}`;
+        }
+      }
+    } catch (ipErr) {
+      console.warn('IP geolocation lookup failed:', ipErr);
+    }
+  }
+
+  if (!targetLocation && !lat && !lng) {
+    targetLocation = 'Bangalore';
+  }
 
   try {
     const ai = getGeminiClient();
@@ -51,9 +73,8 @@ Provide JSON output with:
 7. "adviceSummary": 1-2 sentence fashion and wardrobe advice tailored for the current weather at these coordinates.
 `;
     } else {
-      const locStr = location || 'Bangalore';
       prompt = `
-Give realistic current typical weather data and clothing advice for the city or location: "${locStr}".
+Give realistic current typical weather data and clothing advice for the city or location: "${targetLocation}".
 Provide JSON output with:
 1. "location": Proper capitalized City / Location name (e.g. "New York", "Tokyo", "London", "Paris", "Mumbai", "Hyderabad", etc.).
 2. "temperatureC": Estimated temperature in Celsius (integer).
@@ -61,7 +82,7 @@ Provide JSON output with:
 4. "condition": Weather condition (Must be one of: "Sunny", "Partly Cloudy", "Cloudy", "Rainy", "Windy", "Snowy", "Hot & Sunny", "Cold & Crisp").
 5. "humidity": Humidity percentage (integer 10-95).
 6. "season": Season name ("Spring", "Summer", "Autumn", "Winter").
-7. "adviceSummary": 1-2 sentence fashion and wardrobe advice tailored for weather in ${locStr}.
+7. "adviceSummary": 1-2 sentence fashion and wardrobe advice tailored for weather in ${targetLocation}.
 `;
     }
 
@@ -97,13 +118,13 @@ Provide JSON output with:
       else if (condition.includes('Wind')) icon = 'wind';
 
       return res.json({
-        location: data.location || location,
+        location: data.location || targetLocation || 'Detected Location',
         temperatureC: Math.round(data.temperatureC ?? 25),
-        temperatureF: Math.round(data.temperatureF ?? (data.temperatureC * 1.8 + 32)),
+        temperatureF: Math.round(data.temperatureF ?? ((data.temperatureC ?? 25) * 1.8 + 32)),
         condition,
         humidity: Math.round(data.humidity ?? 50),
         season: data.season || 'Summer',
-        adviceSummary: data.adviceSummary || `Pleasant weather in ${location}. Great for comfortable clothing.`,
+        adviceSummary: data.adviceSummary || `Pleasant weather in ${data.location || targetLocation}. Great for comfortable clothing.`,
         icon,
       });
     }
@@ -112,6 +133,7 @@ Provide JSON output with:
   }
 
   // Sample fallback presets
+  const safeLocation = targetLocation || 'Bangalore';
   const cityPreset: Record<string, any> = {
     'Bangalore': {
       temperatureC: 26,
@@ -128,14 +150,6 @@ Provide JSON output with:
       humidity: 48,
       season: 'Summer',
       adviceSummary: 'Warm and bright sunny day. Opt for lightweight breathable cottons, sun eyewear, and light color tones.',
-    },
-    'Madurai': {
-      temperatureC: 34,
-      temperatureF: 93,
-      condition: 'Hot & Sunny',
-      humidity: 52,
-      season: 'Summer',
-      adviceSummary: 'Warm tropical sunshine. Select ultra-light linen, airy short sleeves, and UV protective accessories.',
     },
     'Mumbai': {
       temperatureC: 29,
@@ -179,14 +193,14 @@ Provide JSON output with:
     },
   };
 
-  const formattedKey = Object.keys(cityPreset).find(k => k.toLowerCase() === location.toLowerCase()) || location;
+  const formattedKey = Object.keys(cityPreset).find(k => k.toLowerCase() === safeLocation.toLowerCase()) || safeLocation;
   const selected = cityPreset[formattedKey] || {
-    temperatureC: 24,
-    temperatureF: 75,
+    temperatureC: 25,
+    temperatureF: 77,
     condition: 'Sunny',
     humidity: 50,
     season: 'Spring',
-    adviceSummary: `Pleasant weather in ${location}. Great for versatile smart casual outfits.`,
+    adviceSummary: `Pleasant current weather in ${safeLocation}. Great for versatile smart casual outfits.`,
   };
 
   res.json({

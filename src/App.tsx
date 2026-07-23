@@ -272,6 +272,28 @@ export default function App() {
     }
   };
 
+  // Fetch Weather by Auto IP Detection
+  const fetchAutoLocationWeather = async (showNotification = true) => {
+    setIsWeatherLoading(true);
+    try {
+      const res = await fetch('/api/weather?auto=true');
+      if (res.ok) {
+        const data = await res.json();
+        setWeather(data);
+        if (showNotification) {
+          showToast(`📍 Auto-detected location: ${data.location} (${data.temperatureC}°C, ${data.condition})`);
+        }
+      } else {
+        fetchWeather('Bangalore', false);
+      }
+    } catch (err) {
+      console.error(err);
+      fetchWeather('Bangalore', false);
+    } finally {
+      setIsWeatherLoading(false);
+    }
+  };
+
   // Fetch Weather by Geographic Coordinates (GPS)
   const fetchWeatherByCoords = async (lat: number, lng: number, showNotification = true) => {
     setIsWeatherLoading(true);
@@ -281,28 +303,28 @@ export default function App() {
         const data = await res.json();
         setWeather(data);
         if (showNotification) {
-          showToast(`📍 Auto-detected location: ${data.location} (${data.temperatureC}°C, ${data.condition})`);
+          showToast(`📍 Auto-detected GPS location: ${data.location} (${data.temperatureC}°C, ${data.condition})`);
         }
       } else {
-        if (showNotification) showToast(`⚠️ Could not detect city for GPS coordinates`);
+        fetchAutoLocationWeather(showNotification);
       }
     } catch (err) {
       console.error(err);
-      if (showNotification) showToast(`⚠️ Network error during GPS location lookup`);
+      fetchAutoLocationWeather(showNotification);
     } finally {
       setIsWeatherLoading(false);
     }
   };
 
-  // Auto-Detect Current Location via Browser Geolocation API
+  // Auto-Detect Current Location via Browser Geolocation with IP Fallback
   const handleDetectLocation = (showNotification = true) => {
-    if (!navigator.geolocation) {
-      if (showNotification) showToast('⚠️ Geolocation is not supported by your browser');
-      return;
+    if (showNotification) {
+      showToast('📡 Detecting your location...');
     }
 
-    if (showNotification) {
-      showToast('📡 Detecting your current location...');
+    if (!navigator.geolocation) {
+      fetchAutoLocationWeather(showNotification);
+      return;
     }
 
     navigator.geolocation.getCurrentPosition(
@@ -311,13 +333,10 @@ export default function App() {
         fetchWeatherByCoords(latitude, longitude, showNotification);
       },
       (error) => {
-        console.warn('Geolocation prompt or position error:', error);
-        if (showNotification) {
-          showToast('⚠️ Location access denied or unavailable. Fallback to Bangalore.');
-        }
-        fetchWeather('Bangalore', false);
+        console.warn('Browser GPS permission error or unavailable, using IP fallback:', error);
+        fetchAutoLocationWeather(showNotification);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+      { enableHighAccuracy: false, timeout: 6000, maximumAge: 300000 }
     );
   };
 
