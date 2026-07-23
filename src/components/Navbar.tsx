@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shirt, Sparkles, CalendarDays, BarChart2, Sun, Moon, CloudRain, CloudSun, Wind, Snowflake, MapPin, ChevronDown, User as UserIcon, LogOut, LogIn, RefreshCw, Sliders, WashingMachine } from 'lucide-react';
+import { Shirt, Sparkles, CalendarDays, BarChart2, Sun, Moon, CloudRain, CloudSun, Wind, Snowflake, MapPin, ChevronDown, User as UserIcon, LogOut, LogIn, RefreshCw, Sliders, WashingMachine, LocateFixed } from 'lucide-react';
 import { WeatherData, UserStylePreferences } from '../types';
 import { User, logoutUser } from '../lib/firebase';
 
@@ -13,6 +13,7 @@ interface NavbarProps {
   cleanItemsCount: number;
   totalItemsCount: number;
   onRefreshWeather?: (city: string) => void;
+  onDetectLocation?: () => void;
   isWeatherLoading?: boolean;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
@@ -25,8 +26,6 @@ interface NavbarProps {
   isWashingActive?: boolean;
 }
 
-const CITY_PRESETS = ['Bangalore', 'Hyderabad', 'Madurai'];
-
 export const Navbar: React.FC<NavbarProps> = ({
   activeTab,
   setActiveTab,
@@ -37,6 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   cleanItemsCount,
   totalItemsCount,
   onRefreshWeather,
+  onDetectLocation,
   isWeatherLoading,
   isDarkMode,
   onToggleDarkMode,
@@ -139,23 +139,19 @@ export const Navbar: React.FC<NavbarProps> = ({
                   </div>
 
                   <div className="space-y-1">
-                    {CITY_PRESETS.map((city) => (
+                    {onDetectLocation && (
                       <button
-                        key={city}
+                        type="button"
                         onClick={() => {
-                          if (onRefreshWeather) onRefreshWeather(city);
+                          onDetectLocation();
                           setShowLocationMenu(false);
                         }}
-                        className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors flex items-center justify-between ${
-                          weather.location === city
-                            ? 'bg-[#1A1A1A] text-white dark:bg-[#004253] dark:text-white'
-                            : 'hover:bg-[#F5F5F0] dark:hover:bg-[#222226] text-[#1A1A1A] dark:text-white'
-                        }`}
+                        className="w-full text-left px-3 py-2 rounded-lg text-xs font-semibold bg-[#004253] hover:bg-[#003240] dark:bg-[#004253] dark:hover:bg-[#005B73] text-white transition-all flex items-center justify-center gap-2 shadow-sm"
                       >
-                        <span>{city}</span>
-                        {weather.location === city && <span className="text-[10px] text-white dark:text-[#38bdf8] font-bold">Active</span>}
+                        <LocateFixed className="w-4 h-4 shrink-0 animate-pulse" />
+                        <span>Detect My Location (GPS)</span>
                       </button>
-                    ))}
+                    )}
                   </div>
 
                   <form onSubmit={handleCustomCitySubmit} className="pt-2 border-t border-[#E5E5E1] dark:border-[#2A2A30] flex gap-1">

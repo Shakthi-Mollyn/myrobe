@@ -250,24 +250,80 @@ export default function App() {
     }
   }, [wearLogs]);
 
-  // Fetch Weather
-  const fetchWeather = async (city: string) => {
+  // Fetch Weather by City Name
+  const fetchWeather = async (city: string, showNotification = true) => {
     setIsWeatherLoading(true);
     try {
       const res = await fetch(`/api/weather?location=${encodeURIComponent(city)}`);
       if (res.ok) {
         const data = await res.json();
         setWeather(data);
+        if (showNotification) {
+          showToast(`📍 Weather updated for ${data.location} (${data.temperatureC}°C, ${data.condition})`);
+        }
+      } else {
+        if (showNotification) showToast(`⚠️ Could not fetch weather for "${city}"`);
       }
     } catch (err) {
       console.error(err);
+      if (showNotification) showToast(`⚠️ Network error fetching weather`);
     } finally {
       setIsWeatherLoading(false);
     }
   };
 
+  // Fetch Weather by Geographic Coordinates (GPS)
+  const fetchWeatherByCoords = async (lat: number, lng: number, showNotification = true) => {
+    setIsWeatherLoading(true);
+    try {
+      const res = await fetch(`/api/weather?lat=${lat}&lng=${lng}`);
+      if (res.ok) {
+        const data = await res.json();
+        setWeather(data);
+        if (showNotification) {
+          showToast(`📍 Auto-detected location: ${data.location} (${data.temperatureC}°C, ${data.condition})`);
+        }
+      } else {
+        if (showNotification) showToast(`⚠️ Could not detect city for GPS coordinates`);
+      }
+    } catch (err) {
+      console.error(err);
+      if (showNotification) showToast(`⚠️ Network error during GPS location lookup`);
+    } finally {
+      setIsWeatherLoading(false);
+    }
+  };
+
+  // Auto-Detect Current Location via Browser Geolocation API
+  const handleDetectLocation = (showNotification = true) => {
+    if (!navigator.geolocation) {
+      if (showNotification) showToast('⚠️ Geolocation is not supported by your browser');
+      return;
+    }
+
+    if (showNotification) {
+      showToast('📡 Detecting your current location...');
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        fetchWeatherByCoords(latitude, longitude, showNotification);
+      },
+      (error) => {
+        console.warn('Geolocation prompt or position error:', error);
+        if (showNotification) {
+          showToast('⚠️ Location access denied or unavailable. Fallback to Bangalore.');
+        }
+        fetchWeather('Bangalore', false);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  };
+
   useEffect(() => {
-    fetchWeather('Bangalore');
+    // Attempt location auto-detection on initial mount
+    handleDetectLocation(false);
   }, []);
 
   const showToast = (msg: string) => {
@@ -477,6 +533,7 @@ export default function App() {
         cleanItemsCount={cleanItemsCount}
         totalItemsCount={wardrobe.length}
         onRefreshWeather={fetchWeather}
+        onDetectLocation={() => handleDetectLocation(true)}
         isWeatherLoading={isWeatherLoading}
         isDarkMode={isDarkMode}
         onToggleDarkMode={() => setIsDarkMode((prev) => !prev)}

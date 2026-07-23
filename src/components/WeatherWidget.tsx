@@ -1,24 +1,20 @@
 import React, { useState } from 'react';
-import { Sun, CloudRain, CloudSun, Wind, Snowflake, MapPin, RefreshCw } from 'lucide-react';
+import { Sun, CloudRain, CloudSun, Wind, Snowflake, MapPin, RefreshCw, LocateFixed } from 'lucide-react';
 import { WeatherData } from '../types';
 
 interface WeatherWidgetProps {
   weather: WeatherData;
   setWeather: React.Dispatch<React.SetStateAction<WeatherData>>;
   onRefreshWeather: (city: string) => void;
+  onDetectLocation?: () => void;
   isLoading: boolean;
 }
-
-const CITY_PRESETS = [
-  'Bangalore',
-  'Hyderabad',
-  'Madurai',
-];
 
 export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
   weather,
   setWeather,
   onRefreshWeather,
+  onDetectLocation,
   isLoading,
 }) => {
   const [customLocationInput, setCustomLocationInput] = useState('');
@@ -88,33 +84,29 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
         </button>
       </div>
 
-      {/* City Presets Bar */}
+      {/* Location Bar with GPS Detect */}
       <div className="flex items-center justify-between gap-1 pt-1.5 border-t border-[#E5E5E1]/60 dark:border-[#2A2A30] text-[11px]">
-        <span className="text-[10px] uppercase font-bold tracking-widest text-[#7A7A75] dark:text-[#A1A1AA]">Location:</span>
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
-          {CITY_PRESETS.map((city) => (
+        <div className="flex items-center gap-1.5 w-full justify-between">
+          {onDetectLocation && (
             <button
-              key={city}
-              id={`btn-weather-city-${city.toLowerCase().replace(/\s+/g, '-')}`}
-              onClick={() => onRefreshWeather(city)}
+              id="btn-weather-gps-detect"
+              onClick={() => onDetectLocation()}
               disabled={isLoading}
-              className={`px-2 py-0.5 rounded-lg font-medium transition-all text-[11px] whitespace-nowrap ${
-                weather.location === city
-                  ? 'bg-[#004253] dark:bg-[#005B73] text-white'
-                  : 'bg-[#F9F9F8] dark:bg-[#222226] hover:bg-[#F5F5F0] dark:hover:bg-[#2A2A30] text-[#7A7A75] dark:text-[#A1A1AA] border border-[#E5E5E1] dark:border-[#2A2A30]'
-              }`}
+              title="Auto-detect current location using GPS"
+              className="px-2.5 py-1 rounded-lg font-semibold bg-[#004253] hover:bg-[#003240] dark:bg-[#004253] dark:hover:bg-[#005B73] text-white transition-all text-[11px] whitespace-nowrap flex items-center gap-1.5 shadow-xs"
             >
-              {city}
+              <LocateFixed className="w-3.5 h-3.5 animate-pulse shrink-0" />
+              <span>Detect GPS Location</span>
             </button>
-          ))}
+          )}
 
           {!showCustomInput ? (
             <button
               id="btn-weather-custom-city"
               onClick={() => setShowCustomInput(true)}
-              className="px-2 py-0.5 rounded-lg bg-[#F9F9F8] dark:bg-[#222226] text-[#7A7A75] dark:text-[#A1A1AA] hover:text-[#1A1A1A] dark:hover:text-white border border-[#E5E5E1] dark:border-[#2A2A30] text-[11px] whitespace-nowrap"
+              className="px-2 py-1 rounded-lg bg-[#F9F9F8] dark:bg-[#222226] text-[#7A7A75] dark:text-[#A1A1AA] hover:text-[#1A1A1A] dark:hover:text-white border border-[#E5E5E1] dark:border-[#2A2A30] text-[11px] whitespace-nowrap font-medium"
             >
-              + Other
+              Search City
             </button>
           ) : (
             <form onSubmit={handleCustomCitySubmit} className="flex items-center gap-1">
@@ -122,12 +114,12 @@ export const WeatherWidget: React.FC<WeatherWidgetProps> = ({
                 type="text"
                 value={customLocationInput}
                 onChange={(e) => setCustomLocationInput(e.target.value)}
-                placeholder="City..."
-                className="px-2 py-0.5 text-[11px] rounded-lg bg-white dark:bg-[#1C1C20] border border-[#E5E5E1] dark:border-[#2A2A30] text-[#1A1A1A] dark:text-white focus:outline-none w-20"
+                placeholder="City name..."
+                className="px-2 py-1 text-[11px] rounded-lg bg-white dark:bg-[#1C1C20] border border-[#E5E5E1] dark:border-[#2A2A30] text-[#1A1A1A] dark:text-white focus:outline-none w-28"
               />
               <button
                 type="submit"
-                className="px-2 py-0.5 text-[11px] rounded-lg bg-[#004253] dark:bg-[#005B73] text-white font-medium"
+                className="px-2 py-1 text-[11px] rounded-lg bg-[#004253] dark:bg-[#005B73] text-white font-medium shrink-0"
               >
                 Go
               </button>

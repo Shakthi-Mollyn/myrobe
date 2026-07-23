@@ -28,11 +28,90 @@ const getGeminiClient = () => {
   });
 };
 
-// Simulated Weather API Endpoint
-app.get('/api/weather', (req, res) => {
-  const location = (req.query.location as string) || 'Bangalore';
+// Weather API Endpoint with AI Weather Lookup
+app.get('/api/weather', async (req, res) => {
+  const location = req.query.location as string;
+  const lat = req.query.lat as string;
+  const lng = req.query.lng as string;
 
-  // Sample locations mock weather generator
+  try {
+    const ai = getGeminiClient();
+    let prompt = '';
+
+    if (lat && lng) {
+      prompt = `
+Determine the exact city/town name, current typical weather, and wardrobe advice for geographic GPS coordinates: Latitude ${lat}, Longitude ${lng}.
+Provide JSON output with:
+1. "location": City/Town name (e.g. "Hyderabad", "Bangalore", "New York", "London", "Tokyo", etc.).
+2. "temperatureC": Estimated temperature in Celsius (integer).
+3. "temperatureF": Temperature in Fahrenheit (integer).
+4. "condition": Weather condition (Must be one of: "Sunny", "Partly Cloudy", "Cloudy", "Rainy", "Windy", "Snowy", "Hot & Sunny", "Cold & Crisp").
+5. "humidity": Humidity percentage (integer 10-95).
+6. "season": Season name ("Spring", "Summer", "Autumn", "Winter").
+7. "adviceSummary": 1-2 sentence fashion and wardrobe advice tailored for the current weather at these coordinates.
+`;
+    } else {
+      const locStr = location || 'Bangalore';
+      prompt = `
+Give realistic current typical weather data and clothing advice for the city or location: "${locStr}".
+Provide JSON output with:
+1. "location": Proper capitalized City / Location name (e.g. "New York", "Tokyo", "London", "Paris", "Mumbai", "Hyderabad", etc.).
+2. "temperatureC": Estimated temperature in Celsius (integer).
+3. "temperatureF": Temperature in Fahrenheit (integer).
+4. "condition": Weather condition (Must be one of: "Sunny", "Partly Cloudy", "Cloudy", "Rainy", "Windy", "Snowy", "Hot & Sunny", "Cold & Crisp").
+5. "humidity": Humidity percentage (integer 10-95).
+6. "season": Season name ("Spring", "Summer", "Autumn", "Winter").
+7. "adviceSummary": 1-2 sentence fashion and wardrobe advice tailored for weather in ${locStr}.
+`;
+    }
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3.6-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            location: { type: Type.STRING },
+            temperatureC: { type: Type.NUMBER },
+            temperatureF: { type: Type.NUMBER },
+            condition: { type: Type.STRING },
+            humidity: { type: Type.NUMBER },
+            season: { type: Type.STRING },
+            adviceSummary: { type: Type.STRING },
+          },
+          required: ['location', 'temperatureC', 'temperatureF', 'condition', 'humidity', 'season', 'adviceSummary'],
+        },
+      },
+    });
+
+    const resultText = response.text;
+    if (resultText) {
+      const data = JSON.parse(resultText);
+      const condition = data.condition || 'Sunny';
+      let icon = 'cloud-sun';
+      if (condition.includes('Rain')) icon = 'cloud-rain';
+      else if (condition.includes('Sun')) icon = 'sun';
+      else if (condition.includes('Snow') || condition.includes('Cold')) icon = 'snowflake';
+      else if (condition.includes('Wind')) icon = 'wind';
+
+      return res.json({
+        location: data.location || location,
+        temperatureC: Math.round(data.temperatureC ?? 25),
+        temperatureF: Math.round(data.temperatureF ?? (data.temperatureC * 1.8 + 32)),
+        condition,
+        humidity: Math.round(data.humidity ?? 50),
+        season: data.season || 'Summer',
+        adviceSummary: data.adviceSummary || `Pleasant weather in ${location}. Great for comfortable clothing.`,
+        icon,
+      });
+    }
+  } catch (err) {
+    console.error('Error fetching weather via AI:', err);
+  }
+
+  // Sample fallback presets
   const cityPreset: Record<string, any> = {
     'Bangalore': {
       temperatureC: 26,
@@ -58,19 +137,60 @@ app.get('/api/weather', (req, res) => {
       season: 'Summer',
       adviceSummary: 'Warm tropical sunshine. Select ultra-light linen, airy short sleeves, and UV protective accessories.',
     },
+    'Mumbai': {
+      temperatureC: 29,
+      temperatureF: 84,
+      condition: 'Partly Cloudy',
+      humidity: 75,
+      season: 'Summer',
+      adviceSummary: 'Humid coastal weather. Breathable cottons and moisture-wicking fabrics recommended.',
+    },
+    'Delhi': {
+      temperatureC: 33,
+      temperatureF: 91,
+      condition: 'Hot & Sunny',
+      humidity: 40,
+      season: 'Summer',
+      adviceSummary: 'Warm sunny weather. Light loose garments and sunglasses are ideal.',
+    },
+    'London': {
+      temperatureC: 18,
+      temperatureF: 64,
+      condition: 'Cloudy',
+      humidity: 68,
+      season: 'Spring',
+      adviceSummary: 'Cool overcast weather. Layer with a trench coat or lightweight sweater.',
+    },
+    'New York': {
+      temperatureC: 22,
+      temperatureF: 72,
+      condition: 'Sunny',
+      humidity: 55,
+      season: 'Spring',
+      adviceSummary: 'Mild crisp city weather. Great for stylish jackets, denim, and comfortable sneakers.',
+    },
+    'Tokyo': {
+      temperatureC: 20,
+      temperatureF: 68,
+      condition: 'Partly Cloudy',
+      humidity: 60,
+      season: 'Spring',
+      adviceSummary: 'Comfortable spring day. Ideal for smart layers and casual outer shirts.',
+    },
   };
 
-  const selected = cityPreset[location] || {
-    temperatureC: 21,
-    temperatureF: 70,
+  const formattedKey = Object.keys(cityPreset).find(k => k.toLowerCase() === location.toLowerCase()) || location;
+  const selected = cityPreset[formattedKey] || {
+    temperatureC: 24,
+    temperatureF: 75,
     condition: 'Sunny',
     humidity: 50,
     season: 'Spring',
-    adviceSummary: `Mild weather in ${location}. Great for versatile smart casual outfits.`,
+    adviceSummary: `Pleasant weather in ${location}. Great for versatile smart casual outfits.`,
   };
 
   res.json({
-    location,
+    location: formattedKey,
     ...selected,
     icon: selected.condition === 'Rainy' ? 'cloud-rain' : selected.condition === 'Sunny' ? 'sun' : 'cloud-sun',
   });

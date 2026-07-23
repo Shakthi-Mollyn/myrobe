@@ -1,6 +1,6 @@
 {
   "name": "Wardrobe & Outfit Stylist",
   "description": "Track your clothes and accessories at home, log daily outfits, and get AI-powered outfit suggestions tailored to weather and occasion.",
-  "requestFramePermissions": ["camera"],
+  "requestFramePermissions": ["camera", "geolocation"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }
